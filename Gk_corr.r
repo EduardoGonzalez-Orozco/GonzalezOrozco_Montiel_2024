@@ -60,7 +60,7 @@ call_GKT <- function(gg2) {
   
   	GG <- GoodmanKruskalTau(g1,g2, direction = c("column"))
     
-  	outV <- paste(nameCh,GG,pvalue,nameM, sep=",")
+  	outV <- paste(nameCh,GG,nameM, sep=",")
 	   my_mat <- matrix(c(outV), nrow=1,ncol=1)
 	  return(my_mat)
 }
