@@ -1,40 +1,39 @@
-####Programa para estimar valores de asociaciones entre SNP nucleares y mitocondriales utilizando el estadístico Tau de Goodman-Kruskal 
-### Escrito por: Eduardo González
-### Correo: Eduardo.glez.or@gmail.com
-### Nota: Se necesitan los archivos .mtr de nuclear mitocondria generados por genotype_input_generator_GoodMK.NoPhased.pl
-
+## Script to estimate association values between nitochondrial and nuclear SNPs using Goodma-Kruskal tau statistic 
+### By: Eduardo González
+### email: eduardo.glez.or@gmail.com
+### INPUT: The input is generated from mitochondrial and nuclear VCF files (1,000 genomes format) using the script genotype_input_generator_GoodMK.NoPhased.pl
+### Directory and file names must be change in the script 
 library(foreach)
 library(data.table)
 library(DescTools)
 library(parallel)
 
 
-## Indicar directorio de trabajo
+## Indicate working directory 
 setwd("/LUSTRE/usuario/martin/mitoNuclear_diseq/CHB")
 
 
-### Indicar archivos .mtr nuclear (chrmatrix) y mitocondrial (chrMTmatrix)
+### Indicate input files .mtr nuclear (chrmatrix) and mitocondrial (chrMTmatrix)
 chrmatrix <- as.matrix(fread(“matrix.file.aotusomals.mtr”, header = FALSE))
 chrMTmatrix <- as.matrix(fread("matrix.mitochondrial.mtr", header=FALSE))
 
 
-### Indicar el número de cores con los que se hará el paralelo el trabajo (En este caso es e 32)
+### Indicate number of cores to parallel processing 
 
 cl <- makePSOCKcluster(32)
 
 
-### Inicio del ciclo
 
 for(x in 1:nrow(chrMTmatrix) {
 
-	### Asignando nombres a parejas analizar
+	### Asigning names
 	Ncol <- ncol(chrmatrix)
 	gg1 <- as.vector(chrMTmatrix[x,])
 	limit <- Ncol-1
 	g1 <- gg1[2:limit]
 	nameM <- gg1[1]
 
-	### Exportando variables a trabajar en paralelo 
+	### Exporting variables 
 
 	clusterExport(cl,c('Ncol','g1','GoodmanKruskalTau','nameM'))
 	result <- as.matrix(parRapply(cl,chrmatrix,call_GKT))
@@ -49,7 +48,7 @@ for(x in 1:nrow(chrMTmatrix) {
 
 stopCluster(cl)
 
-##### Función call_GKT la cual. Recibe como input la matriz (archivos .mtr)
+#####  call_GKT function (.mtr files input needed)
 
 call_GKT <- function(gg2) {
   
