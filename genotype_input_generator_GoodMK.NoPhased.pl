@@ -1,11 +1,10 @@
 #!/usr/bin/perl;
 
-### Program to change Genotype conde (0|0)(1|1) to alte/ref, and outputting in a matrix horizontal
+### Program to change genotype code (0|0)(1|1) to alte/ref, and outputting in a horizontal matrix.
 ## Usage
 
 #perl genotype_input_generator.pl vcf_file.vcf
 
-# NOTA: para Mitcondrial se asumira homocigoto ¡¡¡¡ (con fines de calulode LD) 
 
 
 
