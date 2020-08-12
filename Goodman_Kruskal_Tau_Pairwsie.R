@@ -24,7 +24,7 @@ cl <- makePSOCKcluster(32)
 
 
 
-for (x in 1:nrow(chrMTmatrix) {
+for (x in 1:nrow(chrMTmatrix)) {
 
 	### Asigning names
 	Ncol <- ncol(chrmatrix)
