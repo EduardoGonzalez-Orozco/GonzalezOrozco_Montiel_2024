@@ -14,7 +14,7 @@ setwd("/LUSTRE/usuario/martin/mitoNuclear_diseq/CHB")
 
 
 ### Indicate input files .mtr nuclear (chrmatrix) and mitocondrial (chrMTmatrix)
-chrmatrix <- as.matrix(fread(“matrix.file.aotusomals.mtr”, header = FALSE))
+chrmatrix <- as.matrix(fread("matrix.file.aotusomals.mtr", header = FALSE))
 chrMTmatrix <- as.matrix(fread("matrix.mitochondrial.mtr", header=FALSE))
 
 
@@ -24,7 +24,7 @@ cl <- makePSOCKcluster(32)
 
 
 
-for(x in 1:nrow(chrMTmatrix) {
+for (x in 1:nrow(chrMTmatrix) {
 
 	### Asigning names
 	Ncol <- ncol(chrmatrix)
