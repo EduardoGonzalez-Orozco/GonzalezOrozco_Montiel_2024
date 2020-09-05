@@ -1,6 +1,6 @@
 #!/usr/bin/perl;
 
-### Program to change genotype code (0|0)(1|1) to alte/ref, and outputting in a horizontal matrix.
+### Program to change genotype code (0|0)(1|1) to alte/ref.
 ## Usage
 
 #perl genotype_input_generator.pl vcf_file.vcf
