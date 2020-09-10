@@ -31,7 +31,7 @@ while(<FF>) {
 	
 	$totalId=$#line-8;
 	chomp @line;	
-	## Resta 8 posiciones a el total de elementos, ahí empieza los indiviudos
+	
 	$chr=$line[0];
 	$pos=$line[1];
 	$ref=$line[3];
