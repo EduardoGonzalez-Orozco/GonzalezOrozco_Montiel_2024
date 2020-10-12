@@ -10,11 +10,11 @@ library(parallel)
 
 
 ## Indicate working directory 
-setwd("/LUSTRE/usuario/martin/mitoNuclear_diseq/CHB")
+setwd("/path/to/working/files/")
 
 
 ### Indicate input files .mtr nuclear (chrmatrix) and mitocondrial (chrMTmatrix)
-chrmatrix <- as.matrix(fread("matrix.file.aotusomals.mtr", header = FALSE))
+chrmatrix <- as.matrix(fread("matrix.file.autosomals.mtr", header = FALSE))
 chrMTmatrix <- as.matrix(fread("matrix.mitochondrial.mtr", header=FALSE))
 
 
