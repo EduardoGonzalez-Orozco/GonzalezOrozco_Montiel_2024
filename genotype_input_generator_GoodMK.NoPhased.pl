@@ -1,69 +1,71 @@
 #!/usr/bin/perl;
 
-### Program to change genotype code (0|0)(1|1) to alte/ref.
-## Usage
+### Program to convert VCF genotype codes (e.g., 0|0, 1|1) to REF/ALT allele format
+### Usage:
+# perl genotype_input_generator.pl vcf_file.vcf
 
-#perl genotype_input_generator.pl vcf_file.vcf
-
-
-
-
-#use strict;
+# Turn on warnings to catch potential issues (but 'strict' is commented out)
+# use strict;
 use warnings;
 
+# === Input file from command-line argument ===
 $file = $ARGV[0];
 
-$outF="matrix.$file.NoPhased.mtr";
+# === Define output filename ===
+$outF = "matrix.$file.NoPhased.mtr";
 
+# === Open output file for writing (overwrite mode) ===
 open (OUT, "+>$outF") or die $!;
 
-open(FF,$file);
+# === Open input VCF file ===
+open(FF, $file);
 
-$count1=0;
+$count1 = 0;
 
-while(<FF>) {
+# === Main loop over each line in the VCF ===
+while (<FF>) {
+    $li = $_;
 
-	$li=$_;
-	
-	if($li =~ /^[#]/) { next;}
-	
-	@line =split("\t",$li);
-	
-	$totalId=$#line-8;
-	chomp @line;	
-	
-	$chr=$line[0];
-	$pos=$line[1];
-	$ref=$line[3];
-	$alt=$line[4];
+    # Skip header lines starting with #
+    if ($li =~ /^[#]/) { next; }
 
-	$arraout[0]="CP.$chr.$pos\t";
+    # Split the VCF line into fields
+    @line = split("\t", $li);
+    chomp @line;
 
-	##### Generating array 
+    # Total number of individuals (subtract metadata columns)
+    $totalId = $#line - 8;
 
-	for($x=9; $x < $#line+1; ++$x) {
-					$count2=$x-8;
-					#print "VOY $x\n";	
-					#print "REF $ref ALT $alt\n";
-					#print "LL <$line[$x]>\n";
-					if ($line[$x] eq "0|0") { $arraout[$count2]="$ref/$ref\t";}
-					if ($line[$x] eq "0|1") { $arraout[$count2]="$ref/$alt\t";}
- 					if ($line[$x] eq "1|0") { $arraout[$count2]="$ref/$alt\t";}
-					if ($line[$x] eq "1|1") { $arraout[$count2]="$alt/$alt\t";}
-					if($line[$x] eq "0") 	{$arraout[$count2]="$ref\t";}
-					if($line[$x] eq "1")    {$arraout[$count2]="$alt\t";}
-					#print "OO $arraout[$count2]\n";
+    # Extract variant information
+    $chr = $line[0];
+    $pos = $line[1];
+    $ref = $line[3];
+    $alt = $line[4];
 
-					 #<STDIN
-			}
+    # Start building output row: e.g., CP.1.123456<TAB>
+    $arraout[0] = "CP.$chr.$pos\t";
 
-	print OUT "@arraout\n"; 
+    # === Convert genotypes for each sample ===
+    for ($x = 9; $x < $#line + 1; ++$x) {
+        $count2 = $x - 8;
 
+        # Translate genotype code to allele format
+        if ($line[$x] eq "0|0") { $arraout[$count2] = "$ref/$ref\t"; }
+        if ($line[$x] eq "0|1") { $arraout[$count2] = "$ref/$alt\t"; }
+        if ($line[$x] eq "1|0") { $arraout[$count2] = "$ref/$alt\t"; }
+        if ($line[$x] eq "1|1") { $arraout[$count2] = "$alt/$alt\t"; }
+
+        # Haploid / unphased formats (e.g. mitochondrial)
+        if ($line[$x] eq "0")   { $arraout[$count2] = "$ref\t"; }
+        if ($line[$x] eq "1")   { $arraout[$count2] = "$alt\t"; }
+    }
+
+    # Print converted line to output
+    print OUT "@arraout\n";
 }
 
-
+# === Close output file ===
 close OUT;
-
 
 
 
