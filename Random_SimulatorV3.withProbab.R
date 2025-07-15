@@ -4,7 +4,7 @@ library(DescTools)       # For GoodmanKruskalTau and other statistical tools
 
 
 # Set working directory
-setwd("/home/martin/data_lustre/mitoNuclear_diseq/random_test")
+setwd("/path/to/working/directory/")
 
 # === Load input: allele counts from nuclear and mitochondrial MGF files ===
 MGFcountsN <- fread("MXL_all_autosomals_only.snps.mgf.counts.MinVar2.RS")
