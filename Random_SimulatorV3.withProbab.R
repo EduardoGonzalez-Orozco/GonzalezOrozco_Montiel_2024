@@ -1,123 +1,82 @@
-### Código para realizar simulaciones en base a  la variación aleatoria
-#### El input se genera a partir del cálculo de la frecuencia mínima alélica por
-#### posición en cada población 
-#### Escrito por: Eduardo Ma
+# Load required libraries
+library(data.table)      # For fast reading and processing of tabular data
+library(DescTools)       # For GoodmanKruskalTau and other statistical tools
 
 
-library(data.table)
-library(DescTools)
-library(foreach)
-library(doParallel)
-
+# Set working directory
 setwd("/home/martin/data_lustre/mitoNuclear_diseq/random_test")
-## MGF file INPUT (counts only)(RS)
 
+# === Load input: allele counts from nuclear and mitochondrial MGF files ===
 MGFcountsN <- fread("MXL_all_autosomals_only.snps.mgf.counts.MinVar2.RS")
 MGFcountsM <- fread("matrix.MXL.chrMT.phase3_callmom-v0_4.20130502.genotypes.OnlySnps.vcf.NoPhased.mtr.mgf.counts.MinVar2.RS")
-## ParÃ¡metros iniciales
 
-### Alelos posibles
-alleleN <-c("1|1","0/1")
-alleleM <-c("1")
+# === Initial parameters ===
+alleleN <- c("1|1", "0/1")  # Possible genotypes for nuclear SNPs
+alleleM <- c("1")           # Possible genotype for mitochondrial SNPs (haploid)
 
-# Número individuos
-n=64
+n <- 64        # Number of individuals
+s <- 50000000  # Number of simulations
+OUT <- rep(".", s)  # Output vector to store Goodman-Kruskal Tau results
 
-#Número de simulaciones
-s=50000000
-OUT <- rep(".",s)
+# === Create initial vectors with all reference genotypes ===
+gN <- rep("0|0", n)  # All nuclear SNPs initially set to homozygous reference
+gM <- rep("0", n)    # All mitochondrial SNPs initially set to 0
 
+# === Get allele substitution probabilities from frequency in real data (Nuclear) ===
+countS <- as.data.frame(table(MGFcountsN$V6))  # Count occurrences of each substitution level
+nonZ <- apply(countS, 1, function(row) all(row != 0))  # Remove rows with 0s
+countSClean <- countS[nonZ, ]
 
-## Generate SNPs( full of 0)
-
-gN <- rep("0|0",n)
-gM <- rep("0",n)
-
-####### Número de substituciones basado en la frecuencia mínima alélica  (Nuclear):
-  
-  ##  Obteniendo frecuencia
-countS <- as.data.frame(table(MGFcountsN$V6))
-
-  ## Removiendo ceros
-nonZ <- apply(countS,1,function(row) all(row !=0))
-
-countSClean <- countS[nonZ,]
-
-  ## Estimating prob
+# Calculate probabilities
 sumFT <- sum(countSClean$Freq)
-
-probs <- (countSClean$Freq/sumFT)
-
+probs <- countSClean$Freq / sumFT
 countSClean[["probs"]] <- probs
 
-SUBSN <- countSClean$Var1
-PROBSN <- countSClean$probs
+SUBSN <- countSClean$Var1   # Substitution numbers
+PROBSN <- countSClean$probs # Associated probabilities
 
-
-####### Número de substituciones basado en la frecuencia mínima alélica  (Mitocondria):
-
-   ##  Obteniendo frecuencia
+# === Repeat for mitochondrial SNPs ===
 countSM <- as.data.frame(table(MGFcountsM$V6))
+nonZM <- apply(countSM, 1, function(row) all(row != 0))
+countSCleanM <- countSM[nonZM, ]
 
-   ## Removiendo ceros
-
-nonZM <- apply(countSM,1,function(row) all(row !=0))
-
-countSCleanM <- countSM[nonZM,]
-
-## Estimating prob
 sumFTM <- sum(countSCleanM$Freq)
-
-probsM <- (countSCleanM$Freq/sumFTM)
-
+probsM <- countSCleanM$Freq / sumFTM
 countSCleanM[["probs"]] <- probsM
 
 SUBSM <- countSCleanM$Var1
 PROBSM <- countSCleanM$probs
 
-
-
-
-## Loops  y generación de SNP con variación aleatoria   
-startT<- Sys.time()
+# === Main simulation loop ===
+startT <- Sys.time()  # Start timing
 
 for (m in 1:s) {
-	
+  print(m)
 
-   print(m) 
- 
-  gN <- rep("0|0",n)
-  gM <- rep("0",n)
-  
-  
-  # selecting cases
-  SampleNumberN <- sample(SUBSN,1,prob = PROBSN)
-  nx <- round(runif(SampleNumberN,1,length(gN)))
-  
-  SampleNumberM <- sample(SUBSM,1,prob = PROBSM)
-  mx <- round(runif(SampleNumberM,1,length(gM)))
-  
-  ## Sampling genotypes to fill (Nuclear)
-  sustN <- sample(alleleN,SampleNumberN,replace = TRUE)
-  sustM <- sample(alleleM,SampleNumberM,replace = TRUE)
-  
-  ## Sustituyendo Nuclear
-   gN[nx] <-sustN  
-  
-  ## Loop Mitocondrial
-   gM[mx] <-sustM  
-  
-  ## GoodmanKruskal calculation
-  
-  OUT[m] <- GoodmanKruskalTau(gM,gN, direction = c("column"))
-  
+  # Reset genotypes to reference
+  gN <- rep("0|0", n)
+  gM <- rep("0", n)
+
+  # Sample number of substitutions based on observed probabilities
+  SampleNumberN <- sample(SUBSN, 1, prob = PROBSN)
+  nx <- round(runif(SampleNumberN, 1, length(gN)))  # Random nuclear positions to change
+
+  SampleNumberM <- sample(SUBSM, 1, prob = PROBSM)
+  mx <- round(runif(SampleNumberM, 1, length(gM)))  # Random mitochondrial positions to change
+
+  # Randomly assign new genotypes to sampled positions
+  sustN <- sample(alleleN, SampleNumberN, replace = TRUE)
+  sustM <- sample(alleleM, SampleNumberM, replace = TRUE)
+
+  # Replace genotypes in vectors
+  gN[nx] <- sustN
+  gM[mx] <- sustM
+
+  # Compute Goodman-Kruskal's Tau between mitochondrial and nuclear variants
+  OUT[m] <- GoodmanKruskalTau(gM, gN, direction = c("column"))
 }
 
+# Write output to file
+write.table(OUT, file = "MXL.Simulation50M.txt")
 
-write.table(OUT, file ="MXL.Simulation50M.txt")
 
-endT <- Sys.time()
-
-time.taken <- endT- startT
-
-time.taken
