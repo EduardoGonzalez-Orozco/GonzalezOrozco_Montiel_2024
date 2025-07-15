@@ -2,11 +2,27 @@
 library(data.table)      # For fast reading and processing of tabular data
 library(DescTools)       # For GoodmanKruskalTau and other statistical tools
 
-
 # Set working directory
 setwd("/path/to/working/directory/")
 
 # === Load input: allele counts from nuclear and mitochondrial MGF files ===
+
+# Expected format for MGFcountsN and MGFcountsM:
+# These are files generated after processing VCFs into "minor allele count" matrices.
+# The files should be tab-delimited, with at least one column containing 
+# the number of individuals carrying a minor allele (non-reference) for each SNP.
+# Specifically:
+# - Column V6 must contain an integer: the number of individuals carrying the minor allele.
+# - Each row corresponds to a single SNP.
+# - The column V6 (6th column) is the one used here to estimate substitution frequencies.
+
+# Example rows might look like:
+# CHR  POS  ...  V6
+# 1    1234 ...   4
+# 1    2345 ...   1
+# 2    3456 ...   5
+# (etc.)
+
 MGFcountsN <- fread("MXL_all_autosomals_only.snps.mgf.counts.MinVar2.RS")
 MGFcountsM <- fread("matrix.MXL.chrMT.phase3_callmom-v0_4.20130502.genotypes.OnlySnps.vcf.NoPhased.mtr.mgf.counts.MinVar2.RS")
 
@@ -38,45 +54,6 @@ PROBSN <- countSClean$probs # Associated probabilities
 # === Repeat for mitochondrial SNPs ===
 countSM <- as.data.frame(table(MGFcountsM$V6))
 nonZM <- apply(countSM, 1, function(row) all(row != 0))
-countSCleanM <- countSM[nonZM, ]
-
-sumFTM <- sum(countSCleanM$Freq)
-probsM <- countSCleanM$Freq / sumFTM
-countSCleanM[["probs"]] <- probsM
-
-SUBSM <- countSCleanM$Var1
-PROBSM <- countSCleanM$probs
-
-# === Main simulation loop ===
-startT <- Sys.time()  # Start timing
-
-for (m in 1:s) {
-  print(m)
-
-  # Reset genotypes to reference
-  gN <- rep("0|0", n)
-  gM <- rep("0", n)
-
-  # Sample number of substitutions based on observed probabilities
-  SampleNumberN <- sample(SUBSN, 1, prob = PROBSN)
-  nx <- round(runif(SampleNumberN, 1, length(gN)))  # Random nuclear positions to change
-
-  SampleNumberM <- sample(SUBSM, 1, prob = PROBSM)
-  mx <- round(runif(SampleNumberM, 1, length(gM)))  # Random mitochondrial positions to change
-
-  # Randomly assign new genotypes to sampled positions
-  sustN <- sample(alleleN, SampleNumberN, replace = TRUE)
-  sustM <- sample(alleleM, SampleNumberM, replace = TRUE)
-
-  # Replace genotypes in vectors
-  gN[nx] <- sustN
-  gM[mx] <- sustM
-
-  # Compute Goodman-Kruskal's Tau between mitochondrial and nuclear variants
-  OUT[m] <- GoodmanKruskalTau(gM, gN, direction = c("column"))
-}
-
-# Write output to file
-write.table(OUT, file = "MXL.Simulation50M.txt")
+countS
 
 
