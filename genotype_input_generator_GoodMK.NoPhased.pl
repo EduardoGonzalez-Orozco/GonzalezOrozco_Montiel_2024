@@ -4,7 +4,6 @@
 ### Usage:
 # perl genotype_input_generator.pl vcf_file.vcf
 
-# Turn on warnings to catch potential issues (but 'strict' is commented out)
 # use strict;
 use warnings;
 
